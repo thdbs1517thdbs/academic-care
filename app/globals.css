@@ -1,0 +1,23 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f4f6f8;
+  --foreground: #1e293b;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-canvas: #f4f6f8;
+  --color-navy-950: #0e2340;
+  --color-navy-900: #16325c;
+  --color-navy-800: #1e4278;
+  --color-navy-50: #eef3f9;
+  --font-sans: var(--font-noto-sans-kr), "Apple SD Gothic Neo", "Malgun Gothic",
+    sans-serif;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
