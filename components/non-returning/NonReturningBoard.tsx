@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Pagination } from "@/components/early-employment/Pagination";
 import { KpiCard } from "@/components/home/KpiCard";
 import { MemoDialog } from "@/components/non-returning/MemoDialog";
+import { NonReturningExcelControls } from "@/components/non-returning/NonReturningExcelControls";
 import { StudentDetailDialog } from "@/components/non-returning/StudentDetailDialog";
 import {
   ApplicationBadge,
@@ -195,7 +196,8 @@ export function NonReturningBoard({
           </div>
         </div>
 
-        <div className="flex flex-col gap-3 px-4 py-4 sm:px-5 lg:flex-row lg:flex-wrap lg:items-end">
+        <div className="flex min-w-0 flex-col gap-3 px-4 py-4 sm:px-5">
+          <div className="flex min-w-0 flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-end">
           <label className="flex min-w-0 flex-col gap-1 text-xs font-medium text-slate-500 lg:w-56">
             학생명 또는 학번
             <input
@@ -251,6 +253,13 @@ export function NonReturningBoard({
               초기화
             </button>
           )}
+          </div>
+          <NonReturningExcelControls
+            onImported={(nextStudents) => {
+              setStudents(nextStudents);
+              setPage(1);
+            }}
+          />
         </div>
 
         <div className="overflow-x-auto">

@@ -35,7 +35,7 @@ type NonReturningStudentRow = {
   student_name: string;
   department: string;
   student_id: string;
-  email: string;
+  email: string | null;
   nationality: string;
   return_semester: string;
   leave_end_date: string;
@@ -79,6 +79,18 @@ async function selectAll<T>(
       return rows;
     }
   }
+}
+
+function optionalText(value: unknown, field: string, table: string) {
+  if (value == null) {
+    return "";
+  }
+
+  if (typeof value !== "string") {
+    throw new Error(`Unexpected ${field} from public.${table}.`);
+  }
+
+  return value;
 }
 
 function requireText(value: unknown, field: string, table: string) {
@@ -143,7 +155,7 @@ function toNonReturningStudent(row: NonReturningStudentRow): NonReturningStudent
     studentName: requireText(row.student_name, "student_name", "non_returning_students"),
     department: oneOf(row.department, departments, "department", "non_returning_students"),
     studentId,
-    email: requireText(row.email, "email", "non_returning_students"),
+    email: optionalText(row.email, "email", "non_returning_students"),
     nationality: requireText(row.nationality, "nationality", "non_returning_students"),
     returnSemester: requireText(
       row.return_semester,

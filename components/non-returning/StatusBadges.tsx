@@ -9,14 +9,6 @@ export function NationalityBadge({
 }: {
   nationality: string;
 }) {
-  const foreign = nationality !== "대한민국";
-
-  if (!foreign) {
-    return (
-    <span className="text-sm whitespace-nowrap text-slate-700">{nationality}</span>
-  );
-  }
-
   return (
     <span className="inline-flex rounded-md bg-navy-50 px-2 py-0.5 text-xs font-medium whitespace-nowrap text-navy-900">
       {nationality}
