@@ -31,13 +31,13 @@ export const foreignNationalities = [
 export const applicationStatuses = ["신청", "미신청"] as const;
 export const managementStatuses = ["확인 필요", "연락 완료", "처리 완료"] as const;
 export const academicStatuses = ["휴학", "재학"] as const;
-export const academicProcessTypes = ["복학 확인", "연속휴학 확인"] as const;
+export const resolutionTypes = ["복학 확인", "연속휴학 확인"] as const;
 
 export type Department = (typeof departments)[number];
 export type ApplicationStatus = (typeof applicationStatuses)[number];
 export type ManagementStatus = (typeof managementStatuses)[number];
 export type AcademicStatus = (typeof academicStatuses)[number];
-export type AcademicProcessType = (typeof academicProcessTypes)[number];
+export type ResolutionType = (typeof resolutionTypes)[number];
 
 /** 추후 Supabase 미복학 학생 행과 맞출 필드. */
 export type NonReturningStudent = {
@@ -52,6 +52,7 @@ export type NonReturningStudent = {
   applicationStatus: ApplicationStatus;
   academicStatus: AcademicStatus;
   managementStatus: ManagementStatus;
+  resolutionType: ResolutionType | null;
   staffMemo: string;
 };
 

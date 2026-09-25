@@ -18,11 +18,11 @@ import {
   summarizeNonReturning,
 } from "@/lib/non-returning/summary";
 import type {
-  AcademicProcessType,
   ApplicationStatus,
   ManagementStatus,
   NonReturningStudent,
   NonReturningTab,
+  ResolutionType,
 } from "@/lib/non-returning/types";
 import {
   applicationStatuses,
@@ -32,10 +32,10 @@ import {
   managementStatuses,
 } from "@/lib/non-returning/types";
 import {
-  saveNonReturningAcademicProcess,
+  saveNonReturningResolution,
   saveNonReturningStaffMemo,
 } from "@/lib/non-returning/actions";
-import { applyAcademicProcess, applyStaffMemo } from "@/lib/non-returning/updates";
+import { applyResolution, applyStaffMemo } from "@/lib/non-returning/updates";
 
 const pageSize = 18;
 
@@ -130,16 +130,32 @@ export function NonReturningBoard({
     return result;
   }
 
-  async function confirmProcess(studentId: string, processType: AcademicProcessType) {
-    const result = await saveNonReturningAcademicProcess(studentId, processType);
-    if (!result.ok) {
-      return result;
+  async function saveResolution(
+    studentId: string,
+    resolutionType: ResolutionType | null,
+    managementStatus: ManagementStatus,
+  ) {
+    const result = await saveNonReturningResolution(
+      studentId,
+      resolutionType,
+      managementStatus,
+    );
+    if (
+      !result.ok ||
+      result.managementStatus === undefined ||
+      result.resolutionType === undefined
+    ) {
+      return result.ok
+        ? { ok: false as const, message: "저장하지 못했습니다. 화면의 내용은 바꾸지 않았습니다." }
+        : result;
     }
 
+    const savedResolution = result.resolutionType;
+    const savedManagement = result.managementStatus;
     setStudents((current) =>
       current.map((student) =>
         student.studentId === studentId
-          ? applyAcademicProcess(student, processType)
+          ? applyResolution(student, savedResolution, savedManagement)
           : student,
       ),
     );
@@ -379,7 +395,7 @@ export function NonReturningBoard({
       <StudentDetailDialog
         student={detailStudent}
         onClose={() => setDetailStudentId(null)}
-        onConfirmProcess={confirmProcess}
+        onSaveResolution={saveResolution}
       />
     </div>
   );

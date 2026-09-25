@@ -78,6 +78,7 @@ export const nonReturningStudents: NonReturningStudent[] = seeds.map(
     applicationStatus: seed.applicationStatus,
     academicStatus: seed.academicStatus ?? "휴학",
     managementStatus: seed.managementStatus,
+    resolutionType: null,
     staffMemo: seed.staffMemo ?? "",
   }),
 );

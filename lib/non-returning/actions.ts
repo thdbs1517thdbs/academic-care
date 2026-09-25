@@ -2,21 +2,23 @@
 
 import { revalidatePath } from "next/cache";
 import {
-  academicProcessTypes,
-  academicStatuses,
-  applicationStatuses,
-  managementStatuses,
-  type AcademicProcessType,
-  type AcademicStatus,
-  type ApplicationStatus,
-  type ManagementStatus,
-} from "@/lib/non-returning/types";
+  isResolutionSaveAllowed,
+  parseManagementStatus,
+  parseResolutionType,
+  completionRequiresResolutionMessage,
+} from "@/lib/non-returning/resolution";
+import type { ManagementStatus, ResolutionType } from "@/lib/non-returning/types";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
 const memoMaxLength = 500;
 
 export type NonReturningSaveResult =
-  | { ok: true; staffMemo?: string }
+  | {
+      ok: true;
+      staffMemo?: string;
+      resolutionType?: ResolutionType | null;
+      managementStatus?: ManagementStatus;
+    }
   | { ok: false; message: string };
 
 const saveError = "저장하지 못했습니다. 화면의 내용은 바꾸지 않았습니다.";
@@ -52,16 +54,27 @@ export async function saveNonReturningStaffMemo(
   return { ok: true, staffMemo: memo };
 }
 
-export async function saveNonReturningAcademicProcess(
+export async function saveNonReturningResolution(
   studentId: string,
-  processType: AcademicProcessType,
+  resolutionType: ResolutionType | null,
+  managementStatus: ManagementStatus,
 ): Promise<NonReturningSaveResult> {
   const id = parseStudentId(studentId);
-  const changes = academicProcessChanges(processType);
+  const resolution = parseResolutionType(resolutionType);
+  const management = parseManagementStatus(managementStatus);
 
-  if (!id || !changes) {
+  if (!id || resolution === undefined || !management) {
     return { ok: false, message: saveError };
   }
+
+  if (!isResolutionSaveAllowed(resolution, management)) {
+    return { ok: false, message: completionRequiresResolutionMessage };
+  }
+
+  const changes = {
+    resolution_type: resolution,
+    management_status: management,
+  };
 
   try {
     const updated = await updateStudent(id, changes);
@@ -74,7 +87,11 @@ export async function saveNonReturningAcademicProcess(
   }
 
   revalidateNonReturning();
-  return { ok: true };
+  return {
+    ok: true,
+    resolutionType: resolution,
+    managementStatus: management,
+  };
 }
 
 function parseStudentId(studentId: unknown) {
@@ -90,47 +107,12 @@ function parseStudentId(studentId: unknown) {
   return id;
 }
 
-function academicProcessChanges(processType: unknown): {
-  application_status: ApplicationStatus;
-  academic_status: AcademicStatus;
-  management_status: ManagementStatus;
-} | null {
-  if (
-    typeof processType !== "string" ||
-    !academicProcessTypes.includes(processType as AcademicProcessType)
-  ) {
-    return null;
-  }
-
-  const applicationStatus = oneOf("신청", applicationStatuses);
-  const managementStatus = oneOf("처리 완료", managementStatuses);
-  const academicStatus = oneOf(
-    processType === "복학 확인" ? "재학" : "휴학",
-    academicStatuses,
-  );
-
-  if (!applicationStatus || !academicStatus || !managementStatus) {
-    return null;
-  }
-
-  return {
-    application_status: applicationStatus,
-    academic_status: academicStatus,
-    management_status: managementStatus,
-  };
-}
-
-function oneOf<T extends string>(value: string, allowed: readonly T[]) {
-  return allowed.includes(value as T) ? (value as T) : null;
-}
-
 async function updateStudent(
   studentId: string,
   changes:
     | { staff_memo: string | null }
     | {
-        application_status: ApplicationStatus;
-        academic_status: AcademicStatus;
+        resolution_type: ResolutionType | null;
         management_status: ManagementStatus;
       },
 ) {

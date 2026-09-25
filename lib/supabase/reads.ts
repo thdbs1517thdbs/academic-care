@@ -8,12 +8,14 @@ import type {
   Department,
   ManagementStatus,
   NonReturningStudent,
+  ResolutionType,
 } from "@/lib/non-returning/types";
 import {
   academicStatuses,
   applicationStatuses,
   departments,
   managementStatuses,
+  resolutionTypes,
 } from "@/lib/non-returning/types";
 
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
@@ -42,6 +44,7 @@ type NonReturningStudentRow = {
   application_status: string;
   academic_status: string;
   management_status: string;
+  resolution_type: string | null;
   staff_memo: string | null;
 };
 
@@ -185,11 +188,20 @@ function toNonReturningStudent(row: NonReturningStudentRow): NonReturningStudent
       "management_status",
       "non_returning_students",
     ) satisfies ManagementStatus,
+    resolutionType: readResolutionType(row.resolution_type),
     staffMemo:
       row.staff_memo == null
         ? ""
         : requireText(row.staff_memo, "staff_memo", "non_returning_students"),
   };
+}
+
+function readResolutionType(value: string | null): ResolutionType | null {
+  if (value == null) {
+    return null;
+  }
+
+  return oneOf(value, resolutionTypes, "resolution_type", "non_returning_students");
 }
 
 function toConfirmedTerm(row: NonReturningHistoryRow): ConfirmedNonReturningTerm {
@@ -219,7 +231,7 @@ export async function getEarlyEmploymentRecords() {
 export async function getNonReturningStudents() {
   const rows = await selectAll<NonReturningStudentRow>(
     "non_returning_students",
-    "student_name, department, student_id, email, nationality, return_semester, leave_end_date, application_status, academic_status, management_status, staff_memo",
+    "student_name, department, student_id, email, nationality, return_semester, leave_end_date, application_status, academic_status, management_status, resolution_type, staff_memo",
     ["student_id"],
   );
 
